@@ -6,7 +6,7 @@ Trabalho prático desenvolvido na cadeira de Arquitecturas Móveis 2021/2022 por
 - Paul Bob 2016013407
 
 
-#Principais Funcionalidades 
+Principais Funcionalidades 
 - Utilização da localização do dispositivo para receber informação sobre a meteorologia atual;
 - Informação sobre a meteorologia nos 7 dias seguintes;
 - Detalhes da meteorologia (temperatura mínima, máxima, etc);
@@ -14,4 +14,3 @@ Trabalho prático desenvolvido na cadeira de Arquitecturas Móveis 2021/2022 por
 - Ícone da app personalizado
 - Splash Screen 
 - Persistência da última atualização 
-
