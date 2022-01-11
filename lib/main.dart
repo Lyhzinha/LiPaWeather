@@ -1,6 +1,12 @@
+import 'dart:convert';
+import 'dart:ffi';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:location/location.dart';
 import 'package:weather/details_screen.dart';
+import 'package:http/http.dart' as http;
+import 'constants.dart' as constants;
 
 void main() {
   runApp(const MyApp());
@@ -36,12 +42,25 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
+class WeatherData {
+  WeatherData.fromJson(Map<String,dynamic> json):
+
+    temp = json['temp'],
+    feelsLike = json['feels_like'];
+
+  final double temp;
+  final double feelsLike;
+}
+
 class _HomePageState extends State<HomePage> {
   Location location = Location();
 
   bool _serviceEnabled = false;
   PermissionStatus _permissionGranted = PermissionStatus.denied;
   LocationData? _locationData;
+
+  bool _fetchingData = false;
+  WeatherData? _weatherData = null;
 
   @override
   void initState(){
@@ -73,6 +92,21 @@ class _HomePageState extends State<HomePage> {
     _locationData = await location.getLocation();
   }
 
+  Future<void> _fecthWeatherData() async{
+    try{
+      setState(() => _fetchingData = true);
+      http.Response response = await http.get(Uri.parse('https://api.openweathermap.org/data/2.5/onecall?lat='+ _locationData!.latitude.toString() + '&lon='+ _locationData!.longitude.toString() +'&exclude=minutely,hourly,alerts&units=metric&appid=' + constants.API_KEY));
+
+      debugPrint(response.body);
+
+      final Map<String, dynamic> decodedData = json.decode(response.body);
+      setState(() => _weatherData = WeatherData.fromJson(decodedData["current"]));
+
+    } catch(ex){
+      debugPrint('Something went wrong: $ex');
+    }
+  }
+
   void _updateData() {
     setState(() {});
   }
@@ -84,7 +118,7 @@ class _HomePageState extends State<HomePage> {
         title: Text(widget.title),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _updateData,
+        onPressed: _fecthWeatherData,
         tooltip: 'Update',
         child: const Icon(Icons.refresh),
       ),
@@ -98,10 +132,10 @@ class _HomePageState extends State<HomePage> {
               const Text('É necessário dar permissões à aplicação.')
             else if (_locationData == null)
                 const CircularProgressIndicator()
-              else
-                Text('Latitude: ${_locationData!.latitude}; '
-                    'Longitude: ${_locationData!.longitude}'
-                ),
+              else if(_weatherData != null)
+                Text('Temp: ${_weatherData!.temp.toString()}')
+            else
+                  const Text('Deu cocó')
           ],
         ),
       ),
