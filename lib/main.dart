@@ -110,6 +110,7 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       floatingActionButton: FloatingActionButton(
+        backgroundColor: Color.fromRGBO(173, 216, 230, 1),
         onPressed: _fecthWeatherData,
         tooltip: 'Update',
         child: const Icon(Icons.refresh),
@@ -117,9 +118,9 @@ class _HomePageState extends State<HomePage> {
       body: Container(
         width: double.infinity,
         height: double.infinity,
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           image: DecorationImage(
-            image: AssetImage('assets/images/clear.png'),
+            image: AssetImage('assets/images/${_weather!.info.main.toLowerCase()}.png'),
             fit: BoxFit.cover,
           ),
         ),
@@ -147,17 +148,23 @@ class _HomePageState extends State<HomePage> {
   Widget weatherBox() {
     return FutureBuilder(
         builder: (context, snapshot){
-        return Column(
-          children: <Widget> [
-            getWeatherIcon(_weather!.info.icon),
-            Text(
-                '${_weather!.temp} ºC',
-                style: TextStyle(color: Colors.white, fontSize: 30)
-            ),
-            Text('Feels like: ${_weather!.feelsLike} ºC',
-                style: TextStyle(color: Colors.white, fontSize: 12)
-            ),
-          ]
+        return Padding(
+          padding: const EdgeInsets.only(top: 20),
+          child: Column(
+            children: <Widget> [
+              getWeatherIcon(_weather!.info.icon),
+              Text(
+                  '${_weather!.temp.round()} ºC',
+                  style: TextStyle(color: Colors.white, fontSize: 40, fontWeight: FontWeight.bold)
+              ),
+              Text('Feels like: ${_weather!.feelsLike} ºC',
+                  style: TextStyle(color: Colors.white, fontSize: 12)
+              ),
+              Text(' ${_weather!.info.main}', //TODO: APAGAR - só serve para debug da imagem de fundo
+                  style: TextStyle(color: Colors.white, fontSize: 12)
+              ),
+            ]
+          ),
         );
         });
   }
@@ -165,18 +172,30 @@ class _HomePageState extends State<HomePage> {
   Widget hourlyBox() {
     return FutureBuilder(
         builder: (context, snapshot) {
-          return Container(
-          height: 100.0,
-          child: ListView.builder(
-            padding: const EdgeInsets.only(left: 8, top: 0, bottom: 0, right: 8),
-            scrollDirection: Axis.horizontal,
-            itemCount: _weather!.hourly.length,
-            itemBuilder: (BuildContext context, int index) {
-          return Container(
-            child: hourlyElement(index)
-          );
-          }
-          )
+          return Padding(
+            padding: const EdgeInsets.only(top: 30.0),
+            child: Container(
+                width: 375.0,
+                height: 65.0,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: Color.fromRGBO(211, 211, 211, 0.3),
+                  borderRadius: BorderRadius.circular(50),
+                ),
+                child: Container(
+                  width: 300.0,
+                  child: ListView.builder(
+                padding: const EdgeInsets.all(3),
+                scrollDirection: Axis.horizontal,
+                itemCount: _weather!.hourly.length,
+                itemBuilder: (BuildContext context, int index) {
+              return Container(
+                child: hourlyElement(index)
+              );
+              }
+              ),
+            )
+            ),
           );
         }
       );
@@ -187,22 +206,18 @@ class _HomePageState extends State<HomePage> {
     var now = DateTime.now();
     var hours = now.add(new Duration(hours: hoursFromNow));
     return Padding(
-      padding: const EdgeInsets.only(left: 10.0),
+      padding: const EdgeInsets.only(left: 5.0, right: 5.0),
       child: Container(
-        decoration: BoxDecoration(
-          color: Color.fromRGBO(211, 211, 211, 0.3),
-          borderRadius: BorderRadius.circular(10),
-        ),
         child: Padding(
-          padding: const EdgeInsets.all(15.0),
+          padding: const EdgeInsets.only(left: 5.0, right: 5.0, top: 5.0, bottom: 5.0),
           child: Column(
             children: <Widget>[
-              Text(DateFormat.H().format(hours) + 'h',
-              style: TextStyle(color: Colors.white, fontSize: 12),
-              ),
+             /* Text('${_weather!.hourly[hoursFromNow].temp.round()} ºC',
+                style: TextStyle(color: Colors.white, fontSize: 14),
+              ),*/
               getSmallWeatherIcon(_weather!.hourly[hoursFromNow].info.icon),
-              Text('${_weather!.hourly[hoursFromNow].temp.round()} ºC',
-                  style: TextStyle(color: Colors.white, fontSize: 12),
+              Text(DateFormat.H().format(hours) + 'h',
+                style: TextStyle(color: Colors.white, fontSize: 10),
               ),
             ],
           ),
@@ -214,35 +229,43 @@ class _HomePageState extends State<HomePage> {
   Widget dailyBox() {
     var now = DateTime.now();
     return Expanded(
-        child: ListView.builder(
-            shrinkWrap: true,
-            physics: ClampingScrollPhysics(),
-            padding: const EdgeInsets.only(left: 8, top: 50, bottom: 0, right: 8),
-            itemCount: _weather!.daily.length,
-            itemBuilder: (BuildContext context, int index) {
-              return Container(
-                  decoration: BoxDecoration(
-                    color: Color.fromRGBO(211, 211, 211, 0.3),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  padding: const EdgeInsets.only(
-                      left: 10, top: 5, bottom: 5, right: 10),
-                  margin: const EdgeInsets.all(5),
-                  child: Row(children: [
-                    Expanded(
-                        child: Text(DateFormat.E().format(now.add(new Duration(days: index))),
-                          style: TextStyle(fontSize: 14, color: Colors.white),
-                        )),
-                    Expanded(
-                        child: getSmallWeatherIcon(_weather!.daily[index].info.icon)),
-                    Expanded(
-                        child: Text(
-                          "${_weather!.daily[index].min}/${_weather!.daily[index].max}",
-                          textAlign: TextAlign.right,
-                          style: TextStyle(fontSize: 14, color: Colors.white),
-                        )),
-                  ]));
-            }));
+        child: Padding(
+          padding: const EdgeInsets.only(top: 30.0),
+          child: Container(
+            width: 300.0,
+            child: ListView.builder(
+                shrinkWrap: true,
+                physics: ClampingScrollPhysics(),
+                padding: const EdgeInsets.only(left: 8, top: 10, bottom: 20, right: 8),
+                itemCount: _weather!.daily.length,
+                itemBuilder: (BuildContext context, int index) {
+                  return InkWell(
+                    onTap: () => Navigator.pushNamed(
+                      context,
+                        DetailsScreen.routeName,
+                        arguments: _weather!.daily[index]
+                    ),
+                    child: Container(
+                        padding: const EdgeInsets.only(left: 10, top: 5, bottom: 5, right: 10),
+                        margin: const EdgeInsets.all(5),
+                        child: Row(children: [
+                          Expanded(
+                              child: Text(DateFormat.EEEE().format(now.add(new Duration(days: index))),
+                                style: TextStyle(fontSize: 14, color: Colors.white, fontWeight: FontWeight.bold),
+                              )),
+                          Expanded(
+                              child: getSmallWeatherIcon(_weather!.daily[index].info.icon)),
+                          Expanded(
+                              child: Text(
+                                "${_weather!.daily[index].max.round()}ºC /${_weather!.daily[index].min.round()}ºC",
+                                textAlign: TextAlign.right,
+                                style: TextStyle(fontSize: 14, color: Colors.white, fontWeight: FontWeight.bold),
+                              )),
+                        ])),
+                  );
+                }),
+          ),
+        ));
   }
 
   Image getWeatherIcon(String _icon) {
@@ -250,8 +273,8 @@ class _HomePageState extends State<HomePage> {
     String imageExtension = ".png";
     return Image.asset(
       path + _icon + imageExtension,
-      width: 70,
-      height: 70,
+      width: 200,
+      height: 200,
     );
   }
 
@@ -260,8 +283,8 @@ class _HomePageState extends State<HomePage> {
     String imageExtension = ".png";
     return Image.asset(
       path + _icon + imageExtension,
-      width: 40,
-      height: 40,
+      width: 30,
+      height: 30,
     );
   }
 }

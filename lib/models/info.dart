@@ -1,9 +1,9 @@
 class Info {
   Info.fromJson(Map<String,dynamic> json):
 
-        description = json['description'],
+        main = json['main'],
         icon = json['icon'];
 
-  final String description;
+  final String main;
   final String icon;
 }
