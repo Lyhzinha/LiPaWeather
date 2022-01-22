@@ -24,6 +24,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
+      debugShowCheckedModeBanner: false,
       initialRoute: HomePage.routeName,
       routes: {
         HomePage.routeName: (_) => const HomePage(title: 'Home'),
@@ -315,8 +316,10 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _loadSharedPreferences() async {
     SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
-    String lastUpdateString = sharedPreferences.getString('lastUpdate') ?? "";
-    _lastUpdate = DateTime.parse(lastUpdateString);
+    String? lastUpdateString = sharedPreferences.getString('lastUpdate');
+    if(lastUpdateString != null) {
+      _lastUpdate = DateTime.parse(lastUpdateString);
+    }
 
     String? weather = sharedPreferences.getString('weather');
     if(weather != null) {
