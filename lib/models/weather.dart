@@ -12,6 +12,16 @@ class Weather {
         hourly = (json['hourly'] as List).map((hour) => Hourly.fromJson(hour)).toList(),
         daily = (json['daily'] as List).map((day) => Daily.fromJson(day)).toList();
 
+  Map<String, dynamic> toJson() => {
+    'current': {
+      'temp': temp,
+      'feels_like': feelsLike,
+      'weather': [info.toJson()],
+    },
+    'hourly': hourly,
+    'daily': daily
+  };
+
   final double temp;
   final double feelsLike;
   final Info info;

@@ -4,6 +4,11 @@ class Info {
         main = json['main'],
         icon = json['icon'];
 
+  Map<String, dynamic> toJson() => {
+    'main': main,
+    'icon': icon
+  };
+
   final String main;
   final String icon;
 }

@@ -12,6 +12,19 @@ class Daily {
         wind = json['wind_speed'].toDouble(),
         info = Info.fromJson(json['weather'][0]);
 
+  Map<String, dynamic> toJson() => {
+    'dt': dt,
+    'temp': {
+      'min': min,
+      'max': max
+    },
+    'sunrise': sunrise,
+    'sunset': sunset,
+    'humidity': humidity,
+    'wind_speed': wind,
+    'weather': [ info.toJson() ]
+  };
+
   final int dt;
   final double min;
   final double max;

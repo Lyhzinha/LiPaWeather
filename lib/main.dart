@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:location/location.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:weather/details_screen.dart';
 import 'package:http/http.dart' as http;
 import 'constants.dart' as constants;
@@ -49,15 +50,25 @@ class _HomePageState extends State<HomePage> {
   PermissionStatus _permissionGranted = PermissionStatus.denied;
   LocationData? _locationData;
 
+  DateTime? _lastUpdate;
+
   Weather? _weather;
 
   @override
   void initState() {
     super.initState();
-    _fetchLocation();
+    _checkServicesAndPermissions();
+    _loadSharedPreferences();
   }
 
-  Future<void> _fetchLocation() async {
+  Future<void> _updateInfo() async{
+    await _checkServicesAndPermissions();
+    await _fetchLocation();
+    await _fecthWeatherData();
+    await _saveSharedPreferences();
+  }
+
+  Future<void> _checkServicesAndPermissions() async {
     _serviceEnabled = await location
         .serviceEnabled(); // Verifica se os serviços de localização estão ativos
     if (!_serviceEnabled) {
@@ -69,19 +80,17 @@ class _HomePageState extends State<HomePage> {
     if (_permissionGranted == PermissionStatus.denied) {
       _permissionGranted = await location.requestPermission();
     }
+    setState(() {});
+  }
 
-    await _getCoordinates();
+  Future<void> _fetchLocation() async {
+    _locationData = await location.getLocation();
 
-    _fecthWeatherData();
     setState(() {});
 
     location.onLocationChanged.listen(((locationData) {
       setState(() => _locationData = locationData);
     }));
-  }
-
-  Future<void> _getCoordinates() async {
-    _locationData = await location.getLocation();
   }
 
   bool _fetchingData = false;
@@ -96,10 +105,10 @@ class _HomePageState extends State<HomePage> {
               '&exclude=minutely,alerts&units=metric&appid=' +
               constants.API_KEY));
 
-      debugPrint(response.body);
+      debugPrint(response.body); //TODO: Tirar esta linha
 
       final Map<String, dynamic> decodedData = json.decode(response.body);
-
+      _lastUpdate = DateTime.now();
       setState(() => _weather = Weather.fromJson(decodedData));
     } catch (ex) {
       debugPrint('Something went wrong: $ex');
@@ -111,7 +120,7 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       floatingActionButton: FloatingActionButton(
         backgroundColor: Color.fromRGBO(173, 216, 230, 1),
-        onPressed: _fecthWeatherData,
+        onPressed: _updateInfo,
         tooltip: 'Update',
         child: const Icon(Icons.refresh),
       ),
@@ -120,25 +129,31 @@ class _HomePageState extends State<HomePage> {
         height: double.infinity,
         decoration: BoxDecoration(
           image: DecorationImage(
-            image: AssetImage('assets/images/${_weather!.info.main.toLowerCase()}.png'),
+            image: AssetImage(_weather != null ? 'assets/images/${_weather!.info.main.toLowerCase()}.png' : 'assets/images/background.png'),
             fit: BoxFit.cover,
           ),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            if(!_serviceEnabled)
-              const Text('É necessário ativar os serviços de localização.')
-            else
-              if(_permissionGranted == PermissionStatus.denied)
-                const Text('É necessário dar permissões à aplicação.')
+            if(_weather == null)
+              if(!_serviceEnabled)
+                const Text('É necessário ativar os serviços de localização.',
+                    style: TextStyle(color: Colors.white))
               else
-                if (_locationData == null || _weather == null)
-                  const CircularProgressIndicator()
-            else
+                if(_permissionGranted == PermissionStatus.denied)
+                  const Text('É necessário dar permissões à aplicação.',
+                      style: TextStyle(color: Colors.white))
+                else
+                  const Text('Sem informação. Deve fazer refresh.',
+                      style: TextStyle(color: Colors.white))
+            else ...[
               weatherBox(),
+              Text('Última atualização: ' + DateFormat.Hm().format(_lastUpdate!) + ' do dia ' + DateFormat.MMMMd().format(_lastUpdate!),
+                  style: TextStyle(color: Colors.white, fontSize: 9)),
               hourlyBox(),
-              dailyBox(),
+              dailyBox()
+            ],
           ],
         ),
       ),
@@ -146,6 +161,8 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget weatherBox() {
+    if(_weather == null)
+      return Text("Não existe informação disponível");
     return FutureBuilder(
         builder: (context, snapshot){
         return Padding(
@@ -154,14 +171,8 @@ class _HomePageState extends State<HomePage> {
             children: <Widget> [
               getWeatherIcon(_weather!.info.icon),
               Text(
-                  '${_weather!.temp.round()} ºC',
+                  '${_weather!.temp.round()}ºC',
                   style: TextStyle(color: Colors.white, fontSize: 40, fontWeight: FontWeight.bold)
-              ),
-              Text('Feels like: ${_weather!.feelsLike} ºC',
-                  style: TextStyle(color: Colors.white, fontSize: 12)
-              ),
-              Text(' ${_weather!.info.main}', //TODO: APAGAR - só serve para debug da imagem de fundo
-                  style: TextStyle(color: Colors.white, fontSize: 12)
               ),
             ]
           ),
@@ -170,22 +181,24 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget hourlyBox() {
+    if(_weather == null)
+      return Text("Não existe informação disponível");
     return FutureBuilder(
         builder: (context, snapshot) {
           return Padding(
             padding: const EdgeInsets.only(top: 30.0),
             child: Container(
                 width: 375.0,
-                height: 65.0,
+                height: 80.0,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
                   color: Color.fromRGBO(211, 211, 211, 0.3),
-                  borderRadius: BorderRadius.circular(50),
+                  borderRadius: BorderRadius.circular(20),
                 ),
                 child: Container(
-                  width: 300.0,
+                  width: 340.0,
                   child: ListView.builder(
-                padding: const EdgeInsets.all(3),
+                padding: const EdgeInsets.only(right: 7, top: 10),
                 scrollDirection: Axis.horizontal,
                 itemCount: _weather!.hourly.length,
                 itemBuilder: (BuildContext context, int index) {
@@ -203,6 +216,8 @@ class _HomePageState extends State<HomePage> {
 
   
   Widget hourlyElement(hoursFromNow) {
+    if(_weather == null)
+      return Text("Não existe informação disponível");
     var now = DateTime.now();
     var hours = now.add(new Duration(hours: hoursFromNow));
     return Padding(
@@ -212,9 +227,9 @@ class _HomePageState extends State<HomePage> {
           padding: const EdgeInsets.only(left: 5.0, right: 5.0, top: 5.0, bottom: 5.0),
           child: Column(
             children: <Widget>[
-             /* Text('${_weather!.hourly[hoursFromNow].temp.round()} ºC',
-                style: TextStyle(color: Colors.white, fontSize: 14),
-              ),*/
+              Text('${_weather!.hourly[hoursFromNow].temp.round()}ºC',
+                style: TextStyle(color: Colors.white, fontSize: 11),
+              ),
               getSmallWeatherIcon(_weather!.hourly[hoursFromNow].info.icon),
               Text(DateFormat.H().format(hours) + 'h',
                 style: TextStyle(color: Colors.white, fontSize: 10),
@@ -227,6 +242,8 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget dailyBox() {
+    if(_weather == null)
+      return Text("Não existe informação disponível");
     var now = DateTime.now();
     return Expanded(
         child: Padding(
@@ -286,6 +303,27 @@ class _HomePageState extends State<HomePage> {
       width: 30,
       height: 30,
     );
+  }
+
+  Future<void> _saveSharedPreferences() async {
+    SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
+    sharedPreferences.setString('lastUpdate', _lastUpdate.toString());
+    String weather = jsonEncode(_weather);
+    sharedPreferences.setString('weather', weather);
+    debugPrint("Guardei");
+  }
+
+  Future<void> _loadSharedPreferences() async {
+    SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
+    String lastUpdateString = sharedPreferences.getString('lastUpdate') ?? "";
+    _lastUpdate = DateTime.parse(lastUpdateString);
+
+    String? weather = sharedPreferences.getString('weather');
+    if(weather != null) {
+      _weather = Weather.fromJson(jsonDecode(weather));
+
+      setState(() {});
+    }
   }
 }
 

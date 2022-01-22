@@ -60,28 +60,18 @@ class _DetailsScreenState extends State<DetailsScreen>{
   Widget detailsBox() {
     return FutureBuilder(
         builder: (context, snapshot){
-          return Padding(
-            padding: const EdgeInsets.only(top: 20),
-            child: Container(
+          return Container(
               width: 320.0,
-              child: Padding(
-                padding: const EdgeInsets.all(10.0),
-                child: Column(
+              child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                     children: <Widget> [
-                      Padding(
-                        padding: const EdgeInsets.all(10.0),
-                        child: Row(
-                          children: [
+                      Row(children: [
                             getSmallWeatherIcon('sunrise'),
-                            Padding(
-                              padding: const EdgeInsets.all(10.0),
-                              child: Expanded(child:
+                           Expanded(child:
                                 Text('Sunrise',
                                     textAlign: TextAlign.left,
                                   style: TextStyle(color: Colors.white, fontSize: 20)),
                               ),
-                            ),
                             Expanded(child :
                             Text(
                                 '${DateFormat.Hm().format(new DateTime.fromMillisecondsSinceEpoch(_weather.sunrise * 1000))}',
@@ -90,20 +80,15 @@ class _DetailsScreenState extends State<DetailsScreen>{
                             ),
                             ),
                           ]),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.all(10.0),
-                        child: Row(
+                      Row(
                             children: [
                               getSmallWeatherIcon('sunset'),
                               Expanded(child:
-                              Padding(
-                                padding: const EdgeInsets.all(10.0),
-                                child: Text('Sunset',
+                                    Text('Sunset',
                                     textAlign: TextAlign.left,
                                     style: TextStyle(color: Colors.white, fontSize: 20)),
                               ),
-                              ),
+
                               Expanded(child :
                               Text(
                                   '${DateFormat.Hm().format(new DateTime.fromMillisecondsSinceEpoch(_weather.sunset * 1000))}',
@@ -112,20 +97,16 @@ class _DetailsScreenState extends State<DetailsScreen>{
                               ),
                               ),
                             ]),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.all(10.0),
-                        child: Row(
+
+                      Row(
                             children: [
                               getSmallWeatherIcon('humidity'),
-                              Padding(
-                                padding: const EdgeInsets.all(10.0),
-                                child: Expanded(child:
+                              Expanded(child:
                                 Text('Humidity',
                                     textAlign: TextAlign.left,
                                     style: TextStyle(color: Colors.white, fontSize: 20)),
                                 ),
-                              ),
+
                               Expanded(child :
                               Text(
                                   '${_weather.humidity}%',
@@ -134,20 +115,15 @@ class _DetailsScreenState extends State<DetailsScreen>{
                               ),
                               ),
                             ]),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.all(10.0),
-                        child: Row(
+
+                       Row(
                             children: [
                               getSmallWeatherIcon('wind'),
-                              Padding(
-                                padding: const EdgeInsets.all(10.0),
-                                child: Expanded(child:
+                               Expanded(child:
                                 Text('Wind',
                                     textAlign: TextAlign.left,
                                     style: TextStyle(color: Colors.white, fontSize: 20)),
                                 ),
-                              ),
                               Expanded(child :
                               Text(
                                   '${_weather.wind}Km/h',
@@ -156,11 +132,10 @@ class _DetailsScreenState extends State<DetailsScreen>{
                               ),
                               ),
                             ]),
-                      ),
+
                     ]
                 ),
-              ),
-            ),
+
           );
         });
   }
