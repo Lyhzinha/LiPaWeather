@@ -3,7 +3,6 @@
 Trabalho prático desenvolvido na cadeira de Arquitecturas Móveis 2021/2022 por:
 
 - Liliana Faustino 2017012944
-- Paul Bob 2016013407
 
 
 Principais Funcionalidades 
